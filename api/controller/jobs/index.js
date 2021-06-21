@@ -1,0 +1,233 @@
+/* eslint-disable consistent-return */
+const { getReasonPhrase } = require('http-status-codes');
+const Job = require('../../modal/jobs');
+// save new job
+module.exports.saveJob = async (req, res) => {
+  const jobInfo = req.body;
+  console.log(jobInfo);
+  try {
+    if (!jobInfo) {
+      return res.status(400).json({
+        message: 'Provide valid Data',
+        code: 400,
+        status: getReasonPhrase(400),
+        error: true,
+        response: null,
+      });
+    }
+
+    const savedJob = await Job.create(jobInfo);
+    return res.status(200).json({
+      message: 'success',
+      code: 200,
+      status: getReasonPhrase(200),
+      error: false,
+      response: savedJob,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// All jobs
+module.exports.getAllJobs = async (req, res) => {
+  const { limit } = req.params;
+  try {
+    // eslint-disable-next-line radix
+    const jobs = await Job.find({}).limit(parseInt(limit)).sort({ createdAt: -1 });
+
+    if (!jobs) {
+      return res.status(404).json({
+        message: 'No Jobs Available',
+        code: 404,
+        status: getReasonPhrase(404),
+        error: true,
+        response: null,
+      });
+    }
+    return res.status(200).json({
+      message: 'success',
+      code: 200,
+      status: getReasonPhrase(200),
+      error: false,
+      response: jobs,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+};
+
+//  jobs by tag
+module.exports.JobsByTag = async (req, res) => {
+  const { limit, tag } = req.params;
+  try {
+    // eslint-disable-next-line radix
+    const jobs = await Job.find({ tag }).limit(parseInt(limit));
+
+    if (!jobs) {
+      return res.status(404).json({
+        message: 'No Jobs Available',
+        code: 404,
+        status: getReasonPhrase(404),
+        error: true,
+        response: null,
+      });
+    }
+    return res.status(200).json({
+      message: 'success',
+      code: 200,
+      status: getReasonPhrase(200),
+      error: false,
+      response: jobs,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(err);
+  }
+};
+
+// jobs by user
+module.exports.jobsByUser = async (req, res, next) => {
+  const { id } = req.params;
+
+  console.log(id);
+  try {
+    const jobs = await Job.find({ jobPosterId: id });
+    // const jobs = await Job.find();
+
+    if (!jobs) {
+      return res.status(404).json({
+        message: 'No Jobs Available',
+        code: 404,
+        status: getReasonPhrase(404),
+        error: true,
+        response: null,
+      });
+    }
+    return res.status(200).json({
+      message: 'success',
+      code: 200,
+      status: getReasonPhrase(200),
+      error: false,
+      response: jobs,
+    });
+  } catch (err) {
+    console.log(err);
+    next(err);
+  }
+};
+
+// Update job
+module.exports.UpdateJob = async (req, res, next) => {
+  const { id } = req.params;
+  const jobInfo = req.body;
+
+  try {
+    const job = await Job.findById({ _id: id });
+
+    if (job) {
+      const updateJob = await Job.findByIdAndUpdate(id, jobInfo);
+
+      if (updateJob) {
+        const updatedJob = await Job.findById({ _id: id });
+        return res.status(200).json({
+          message: 'success',
+          code: 200,
+          status: getReasonPhrase(200),
+          error: false,
+          response: updatedJob,
+        });
+      }
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+// single job
+module.exports.singleJob = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const job = await Job.findById(id);
+    if (!job) {
+      return res.status(404).json({
+        message: 'Sorry No Job Found',
+        code: 404,
+        status: getReasonPhrase(404),
+        error: true,
+        response: null,
+      });
+    }
+    return res.status(200).json({
+      message: 'success',
+      code: 200,
+      status: getReasonPhrase(200),
+      error: false,
+      response: job,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// delete job
+module.exports.deleteJob = async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const deletedJob = await Job.findByIdAndRemove(id);
+
+    if (!deletedJob) {
+      return res.status(404).json({
+        message: 'Sorry No Job Found',
+        code: 404,
+        status: getReasonPhrase(404),
+        error: true,
+        response: null,
+      });
+    }
+
+    return res.status(200).json({
+      message: 'success',
+      code: 200,
+      status: getReasonPhrase(200),
+      error: false,
+      response: deletedJob,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports.job = async (req, res) => {
+  const { id } = req.params;
+  console.log(id);
+  try {
+    const jobs = await Job.find({ jobPosterId: id });
+    // const jobs = await Job.find();
+    console.log(jobs.length);
+    if (!jobs) {
+      return res.status(404).json({
+        message: 'No Jobs Available',
+        code: 404,
+        status: getReasonPhrase(404),
+        error: true,
+        response: null,
+      });
+    }
+    return res.status(200).json({
+      message: 'success',
+      code: 200,
+      status: getReasonPhrase(200),
+      error: false,
+      response: jobs,
+    });
+  } catch (err) {
+    console.log(err);
+    // next(err);
+  }
+};
+
+module.exports.singleJobById = async (req, res) => {
+  res.send(req.params);
+};
